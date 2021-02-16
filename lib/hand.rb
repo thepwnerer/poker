@@ -11,24 +11,58 @@ class Hand
         @highest_card = 2
     end
 
+    def return_card_value(card)
+        CARD_VALUES.index(card)
+    end
+
+    def return_highest_card
+        self.cards.each do |card|
+            if return_card_value(card.value) > return_card_value(self.highest_card)
+                self.highest_card = card.value
+            end
+        end
+    end
+
+    def calculate_straight
+        def consecutive?(arr)
+            arr.each_cons(2).all? {|a, b| b == a + 1 }
+        end
+        arr = []
+        self.cards.each do |card|
+            arr << return_card_value(card.value)
+        end
+        return true if consecutive?(arr.sort)
+        false
+    end
+
+    def calculate_full_house
+        arr = []
+        self.cards.each do |card|
+            arr << return_card_value(card.value)
+        end
+        arr = arr.sort
+        if arr[0] == arr[1] && arr[2] == arr[3] && arr[3] == arr[4] || arr[3] == arr[4] && arr[0] == arr[1] && arr[1] == arr[2]
+            return true
+        end
+        false
+    end
 
     def calculate_hand
-        suit_count = 0
         pair_count = 0
 
         pair = false
         two_pair = false
         triple = false
+        run = false
         flush = false
         full_house = false
         quad = false
         royal_flush = false
-        run = false
         self.cards.each_with_index do |card1, i|
             self.cards.each_with_index do |card2, j|
                 if i < j
                     if card1.value == card2.value
-                        if return_card_values(card1.value) > self.highest_card
+                        if return_card_value(card1.value) > return_card_value(self.highest_card)
                             self.highest_card = card1.value
                         end
                         pair_count += 1
@@ -36,16 +70,29 @@ class Hand
                 end
             end
         end
-        if pair_count == 2
-            return "two_pair"
-        elsif pair_count = 1
+
+        if calculate_full_house
+            return_highest_card()
+            return "full_house"
+        elsif self.cards.all? { |card| card.suit == self.cards[0].suit }
+            return_highest_card()
+            return "flush"
+        elsif calculate_straight
+            return_highest_card()
+            return "straight"
+        elsif pair_count == 3
+            return "triple"
+        elsif pair_count == 2
+            return "two_pairs"
+        elsif pair_count == 1
             return "pair"
+        else
+            return_highest_card()
+            return self.highest_value
         end
     end
 
-    def return_card_values(card)
-        CARD_VALUES.index(card)
-    end
+
 
     def reset
         self.highest_value = "nothing"

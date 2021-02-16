@@ -61,6 +61,42 @@ describe Hand do
             hand.cards = [Card.new(9,"diamonds"),Card.new(9,"clubs"),Card.new(10,"clubs"),Card.new('J',"diamonds"),Card.new('Q',"diamonds")]
             expect(hand.calculate_hand).to eq("pair")
         end
+
+        it "can take a hand with two a pairs and return two pairs" do
+            hand.cards = []
+            hand.cards = [Card.new(9,"diamonds"),Card.new(9,"clubs"),Card.new(10,"clubs"),Card.new(10,"diamonds"),Card.new('Q',"diamonds")]
+            expect(hand.calculate_hand).to eq("two_pairs")
+            expect(hand.highest_card).to eq(10)
+        end
+
+        it "can take a hand with three and return triples" do
+            hand.cards = []
+            hand.cards = [Card.new(9,"diamonds"),Card.new(9,"clubs"),Card.new(9,"hearts"),Card.new(10,"diamonds"),Card.new('Q',"diamonds")]
+            expect(hand.calculate_hand).to eq("triple")
+            expect(hand.highest_card).to eq(9)
+        end
+
+        it "can take a hand with five consecutive cards and give back straight" do
+            hand.cards = []
+            hand.cards = [Card.new(9,"hearts"),Card.new(8,"diamonds"),Card.new(7,"diamonds"),Card.new(6,"diamonds"),Card.new(5,"diamonds")]
+            expect(hand.calculate_hand).to eq("straight")
+            expect(hand.highest_card).to eq(9)
+        end
+
+        it "can take a hand with five of the same suit and return flush" do
+            hand.cards = []
+            hand.cards = [Card.new(9,"diamonds"),Card.new(8,"diamonds"),Card.new(7,"diamonds"),Card.new(6,"diamonds"),Card.new(5,"diamonds")]
+            expect(hand.calculate_hand).to eq("flush")
+            expect(hand.highest_card).to eq(9)
+        end
+
+        it "can take a hand with a pair and triples and return full house" do
+            hand.cards = []
+            hand.cards = [Card.new(9,"hearts"),Card.new(8,"diamonds"),Card.new(8,"hearts"),Card.new(9,"diamonds"),Card.new(9,"clubs")]
+            expect(hand.calculate_hand).to eq("full_house")
+            expect(hand.highest_card).to eq(9)
+        end
+
     end
 end
 
