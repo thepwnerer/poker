@@ -3,6 +3,7 @@ require_relative "deck"
 class Hand
     attr_accessor :cards, :highest_value, :highest_card
     CARD_VALUES = [2,3,4,5,6,7,8,9,10,"J","Q","K","A"]
+    WINNING_ORDER = ["nothing","pair","two_pair","triple","run","flush","full_house","quad","straight_flush"]
 
     def initialize(deck)
         @cards = []
@@ -23,6 +24,15 @@ class Hand
         end
     end
 
+    def get_highest_from_middle
+        arr = []
+        self.cards.each do |card|
+            arr << return_card_value(card.value)
+        end
+        arr = arr.sort
+        self.highest_card = CARD_VALUES[arr[2]]
+    end
+
     def calculate_straight
         def consecutive?(arr)
             arr.each_cons(2).all? {|a, b| b == a + 1 }
@@ -41,7 +51,19 @@ class Hand
             arr << return_card_value(card.value)
         end
         arr = arr.sort
-        if arr[0] == arr[1] && arr[2] == arr[3] && arr[3] == arr[4] || arr[3] == arr[4] && arr[0] == arr[1] && arr[1] == arr[2]
+        if arr[0] == arr[1] && arr[1] == arr[2] && arr[3] == arr[4] || arr[0] == arr[1] && arr[2] == arr[3] && arr[3] == arr[4]
+            return true
+        end
+        false
+    end
+
+    def calculate_quad
+        arr = []
+        self.cards.each do |card|
+            arr << return_card_value(card.value)
+        end
+        arr = arr.sort
+        if arr[0] == arr[1] && arr[1] == arr[2] && arr[2] == arr[3] || arr[1] == arr[2] && arr[2] == arr[3] && arr[3] == arr[4]
             return true
         end
         false
@@ -49,15 +71,6 @@ class Hand
 
     def calculate_hand
         pair_count = 0
-
-        pair = false
-        two_pair = false
-        triple = false
-        run = false
-        flush = false
-        full_house = false
-        quad = false
-        royal_flush = false
         self.cards.each_with_index do |card1, i|
             self.cards.each_with_index do |card2, j|
                 if i < j
@@ -71,14 +84,21 @@ class Hand
             end
         end
 
-        if calculate_full_house
-            return_highest_card()
+
+        if self.cards.all? { |card| card.suit == self.cards[0].suit } && calculate_straight
+            return_highest_card
+            return "straight_flush"
+        elsif calculate_quad
+            get_highest_from_middle
+            return "quad"
+        elsif calculate_full_house
+            get_highest_from_middle
             return "full_house"
         elsif self.cards.all? { |card| card.suit == self.cards[0].suit }
-            return_highest_card()
+            return_highest_card
             return "flush"
         elsif calculate_straight
-            return_highest_card()
+            return_highest_card
             return "straight"
         elsif pair_count == 3
             return "triple"
@@ -87,9 +107,19 @@ class Hand
         elsif pair_count == 1
             return "pair"
         else
-            return_highest_card()
+            return_highest_card
             return self.highest_value
         end
+    end
+
+    def calculate_value
+        hand = self.calculate_hand
+        WINNING_ORDER.index(hand)
+    end
+
+    def calculate_highest
+        self.calculate_hand
+        self.highest_card
     end
 
 

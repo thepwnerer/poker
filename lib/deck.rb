@@ -15,7 +15,7 @@ attr_accessor :cards
         self.cards = self.cards.shuffle
     end
 
-    def shuf()
+    def shuf
         self.cards = self.cards.shuffle
     end
 end

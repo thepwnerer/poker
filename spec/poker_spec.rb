@@ -47,6 +47,8 @@ describe Hand do
     #let(:deck) { double("deck") }
     subject(:deck) { Deck.new }
     subject(:hand) { Hand.new(deck) }
+    subject(:game) { Game.new("Dave", "Gavin", "Fernie", "Dinkle") }
+    
 
     describe '#initialize' do
         it "takes five cards from the deck" do
@@ -78,16 +80,16 @@ describe Hand do
 
         it "can take a hand with five consecutive cards and give back straight" do
             hand.cards = []
-            hand.cards = [Card.new(9,"hearts"),Card.new(8,"diamonds"),Card.new(7,"diamonds"),Card.new(6,"diamonds"),Card.new(5,"diamonds")]
+            hand.cards = [Card.new(10,"hearts"),Card.new(9,"diamonds"),Card.new(8,"diamonds"),Card.new(7,"diamonds"),Card.new(6,"diamonds")]
             expect(hand.calculate_hand).to eq("straight")
-            expect(hand.highest_card).to eq(9)
+            expect(hand.highest_card).to eq(10)
         end
 
         it "can take a hand with five of the same suit and return flush" do
             hand.cards = []
-            hand.cards = [Card.new(9,"diamonds"),Card.new(8,"diamonds"),Card.new(7,"diamonds"),Card.new(6,"diamonds"),Card.new(5,"diamonds")]
+            hand.cards = [Card.new(10,"diamonds"),Card.new(8,"diamonds"),Card.new(7,"diamonds"),Card.new(6,"diamonds"),Card.new(5,"diamonds")]
             expect(hand.calculate_hand).to eq("flush")
-            expect(hand.highest_card).to eq(9)
+            expect(hand.highest_card).to eq(10)
         end
 
         it "can take a hand with a pair and triples and return full house" do
@@ -97,6 +99,31 @@ describe Hand do
             expect(hand.highest_card).to eq(9)
         end
 
+        it "can take a hand with four of a kind and return quad" do
+            hand.cards = []
+            hand.cards = [Card.new(8,"hearts"),Card.new(8,"diamonds"),Card.new(8,"clubs"),Card.new(8,"spades"),Card.new(9,"clubs")]
+            expect(hand.calculate_hand).to eq("quad")
+            expect(hand.highest_card).to eq(8)
+        end
+
+        it "can take a hand with a straight and a flush and return straight_flush" do
+            hand.cards = []
+            hand.cards = [Card.new(8,"hearts"),Card.new(9,"hearts"),Card.new(10,"hearts"),Card.new("J","hearts"),Card.new("Q","hearts")]
+            expect(hand.calculate_hand).to eq("straight_flush")
+            expect(hand.highest_card).to eq("Q")
+        end
+
+        it "return value from hand" do
+            hand.cards = []
+            hand.cards = [Card.new(9,"diamonds"),Card.new(9,"clubs"),Card.new(10,"clubs"),Card.new('J',"diamonds"),Card.new('Q',"diamonds")]
+            expect(hand.calculate_value).to eq(1)
+        end
+
+        it "return highest value from hand" do
+            hand.cards = []
+            hand.cards = [Card.new(7,"diamonds"),Card.new(9,"clubs"),Card.new(10,"clubs"),Card.new('J',"diamonds"),Card.new('Q',"diamonds")]
+            expect(hand.calculate_highest).to eq("Q")
+        end
     end
 end
 
@@ -118,4 +145,5 @@ describe Game do
             expect(game.players[0].money).to eq(500)
         end
     end
+
 end
