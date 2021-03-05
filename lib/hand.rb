@@ -1,15 +1,21 @@
 require_relative "deck"
 
 class Hand
-    attr_accessor :cards, :highest_value, :highest_card
+    attr_accessor :cards, :highest_value, :highest_card, :highest_value_number
     CARD_VALUES = [2,3,4,5,6,7,8,9,10,"J","Q","K","A"]
     WINNING_ORDER = ["nothing","pair","two_pair","triple","run","flush","full_house","quad","straight_flush"]
 
     def initialize(deck)
         @cards = []
         5.times { self.cards << deck.cards.shift }
+        @highest_value_number = 0
         @highest_value = "nothing"
         @highest_card = 2
+    end
+
+    def replace(cards, deck)
+        cards_array = [cards]
+        replace_amount = cards.length
     end
 
     def return_card_value(card)
@@ -69,6 +75,10 @@ class Hand
         false
     end
 
+    def calculate_highest_value_number
+        self.highest_value_number = WINNING_ORDER.index(self.highest_value)
+    end
+
     def calculate_hand
         pair_count = 0
         self.cards.each_with_index do |card1, i|
@@ -122,10 +132,38 @@ class Hand
         self.highest_card
     end
 
-
-
     def reset
         self.highest_value = "nothing"
         self.highest_card = 0
     end
+
+    def replace(replace_cards, deck)
+        cards_array = replace_cards.split("")
+        cards_array.map! { |index| index.to_i }
+        replace_amount = cards_array.length
+        replace_amount.times { self.cards << deck.cards.shift }
+        cards_array.each do |delete_index|
+            deck.shuf
+            deck.cards << self.cards.delete_at(delete_index)
+        end
+    end
+
 end
+
+=begin
+deck = Deck.new
+
+test = Hand.new(deck)
+
+p deck.cards.length
+
+test.cards.each do |card|
+    p card
+end
+
+test.replace("210",deck)
+
+test.cards.each do |card|
+    p card
+end
+=end

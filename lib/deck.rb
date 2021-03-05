@@ -9,7 +9,7 @@ attr_accessor :cards
         @cards = Array.new
         SUITS.each do |suit|
             CARDS.each do |value|
-                cards << Card.new(suit,value)
+                cards << Card.new(value,suit)
             end
         end
         self.cards = self.cards.shuffle

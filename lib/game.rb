@@ -4,6 +4,8 @@ require_relative "hand"
 require_relative "player"
 require "pry"
 
+CARD_VALUES = [2,3,4,5,6,7,8,9,10,"J","Q","K","A"]
+
 class Game
     attr_reader :deck
     attr_accessor :players, :pot, :player, :turn, :bet, :current_bet, :previous_bet
@@ -20,6 +22,10 @@ class Game
         @turn = nil
     end
 
+    def return_card_value(card)
+        CARD_VALUES.index(card)
+    end
+
     def bet(player,amount)
         player.remove_money(amount)
         self.pot = self.pot + amount
@@ -34,6 +40,8 @@ class Game
 
     def turn_question(player)
         p "__________________________"
+        p "Your hand is: "
+        print_hand(player)
         p "Money: " + player.money.to_s
         p "It's your turn, " + player.name + "! Would you like to to fold, call, or raise?"
         p "Current bet is: " + self.current_bet.to_s
@@ -61,6 +69,7 @@ class Game
             bet = raise_amount.to_i + self.current_bet
         end
         bet(player, bet)
+        player.called = true
         self.current_bet = self.current_bet + raise_amount.to_i
         self.players.each do |other_player|
             if other_player != player
@@ -78,6 +87,25 @@ class Game
         call_amount = self.current_bet - player.last_bet
         bet(player, call_amount)
         player.playing_round = true
+        player.called = true
+    end
+
+    def print_hand(player)
+        player.hand.cards.each do |card|
+            p card
+        end
+    end
+    
+    def replacement_question(player)
+        print_hand(player)
+        p "Hey, " + player.name + "!Enter the cards that you would like to replace starting from the highest index to the lowest or enter nothing to pass"
+        response = gets.chomp
+        if response
+            player.hand.replace(response,self.deck)
+        end
+        player.called = true
+        print_hand(player)
+        p "__________________________"
     end
 
     def turn_process(action,player)
@@ -107,8 +135,8 @@ class Game
             self.turn = self.players[2]
         when self.players[2]
             self.turn = self.players[3]
-        else
-            self.turn = nil
+        when self.players[3]
+            self.turn = self.players[0]
         end
     end
 
@@ -119,8 +147,10 @@ class Game
         end
     end
 
-    def play
-        until self.game_over == true
+    def betting_round
+        p "__________________________"
+        p "Betting Round Begins"
+        until players.all? { |player| player.called }
             cycle_turn
             begin
                 action = turn_question(self.turn)
@@ -130,7 +160,17 @@ class Game
                 retry
             end
         end
+        reset_players_called
+    end
 
+    def drawing_round
+        p "__________________________"
+        p "Drawing Round Begins"
+        until players.all? { |player| player.called }
+            cycle_turn
+            replacement_question(self.turn)
+        end
+        reset_players_called
     end
 
     def game_over
@@ -144,6 +184,86 @@ class Game
             return true
         end
         false
+    end
+
+    def showdown
+        showdown_hash = Hash.new
+        players_remaining = Array.new
+        highest_values = Array.new
+        highest_cards = Array.new
+        players.each do |player|
+            if player.playing_round = true
+                player.hand.highest_value = player.hand.calculate_hand
+                player.hand.calculate_highest_value_number
+                p player.name
+                player.hand.cards.each do |card|
+                    p card
+                end
+                players_remaining << player
+                highest_values << player.hand.highest_value
+                highest_cards << player.hand.highest_card
+                p player.hand.highest_value
+                p player.hand.highest_card
+                p "__________________________"
+            end
+        end
+        p players_remaining
+        p highest_values
+        p highest_cards
+
+        max_value = highest_values.max_by { |x| x }
+        highest_values.each_with_index.max[1]
+
+        players_highest_values = Array.new
+        players_highest_values_high_cards = Array.new
+        highest_values.each_with_index do |value, index|
+            if value == max_value
+                players_highest_values << players_remaining[index]
+                players_highest_values_high_cards << return_card_value(highest_cards[index])
+            end
+        end
+
+        p players_highest_values
+        p players_highest_values_high_cards
+
+        max_high = players_highest_values_high_cards.max_by { |x| x }
+        last_people_standing = Array.new
+        if players_highest_values.length == 1
+            players_highest_values[0].money += self.pot
+        else
+            players_highest_values_high_cards.each_with_index do |value, index|
+                if value == max_high
+                    last_people_standing << players_remaining[index]
+                end
+            end
+            if last_people_standing.length == 1
+                last_people_standing[0] += self.pot
+            else
+                pot_divided = (self.pot / last_people_standing.length)
+                last_people_standing.each do |person|
+                    person.money += pot_divided
+                end
+            end
+        end
+        self.pot = 0
+    end
+    
+    def play
+        #until self.game_over == true
+=begin
+            players.map { |player| player.playing_round = true }
+            betting_round
+            drawing_round
+            betting_round
+=end
+            showdown
+        #end
+    end
+
+    def reset_players_called
+        players.each do |player|
+            player.called = false
+        end
     end
 end
 
