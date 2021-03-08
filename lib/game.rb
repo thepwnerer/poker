@@ -73,7 +73,9 @@ class Game
         self.current_bet = self.current_bet + raise_amount.to_i
         self.players.each do |other_player|
             if other_player != player
-                other_player.called = false
+                if other_player.playing_round == true
+                    other_player.called = false
+                end
             end
         end
     end
@@ -122,6 +124,7 @@ class Game
             call(player)
         elsif action == "fold"
             player.playing_round = false
+            player.called = true
         end
     end
 
@@ -131,20 +134,47 @@ class Game
             self.turn = self.players[0]
         when self.players[0]
             self.turn = self.players[1]
+            if self.players[1].playing_round == false
+                cycle_turn
+            end
         when self.players[1]
             self.turn = self.players[2]
+            if self.players[2].playing_round == false
+                cycle_turn
+            end
         when self.players[2]
             self.turn = self.players[3]
+            if self.players[3].playing_round == false
+                cycle_turn
+            end
         when self.players[3]
             self.turn = self.players[0]
+            if self.players[0].playing_round == false
+                cycle_turn
+            end
         end
     end
 
-    def reset_bet
+    def reset_bet_called_during_round
         self.current_bet = 0
+        self.previous_bet = 0
         players.each do |player|
-            player.called = false
+            player.last_bet = 0
+            if player.playing_round == true
+                player.called = false
+            end
         end
+        self.turn = nil
+    end
+
+    def reset_bet_called_after_round
+        self.current_bet = 0
+        self.previous_bet = 0
+        players.each do |player|
+                player.called = false
+                player.last_bet = 0
+        end
+        self.turn = nil
     end
 
     def betting_round
@@ -160,7 +190,7 @@ class Game
                 retry
             end
         end
-        reset_players_called
+        reset_bet_called_during_round
     end
 
     def drawing_round
@@ -168,9 +198,11 @@ class Game
         p "Drawing Round Begins"
         until players.all? { |player| player.called }
             cycle_turn
-            replacement_question(self.turn)
+            if self.turn.playing_round == true
+                replacement_question(self.turn)
+            end
         end
-        reset_players_called
+        reset_bet_called_during_round
     end
 
     def game_over
@@ -223,9 +255,6 @@ class Game
             end
         end
 
-        p players_highest_values
-        p players_highest_values_high_cards
-
         max_high = players_highest_values_high_cards.max_by { |x| x }
         last_people_standing = Array.new
         if players_highest_values.length == 1
@@ -237,10 +266,12 @@ class Game
                 end
             end
             if last_people_standing.length == 1
-                last_people_standing[0] += self.pot
+                last_people_standing[0].name + "won " + self.pot.to_s
+                last_people_standing[0].money += self.pot
             else
                 pot_divided = (self.pot / last_people_standing.length)
                 last_people_standing.each do |person|
+                    p person.name + "won " + pot_divided_to.s
                     person.money += pot_divided
                 end
             end
@@ -248,21 +279,21 @@ class Game
         self.pot = 0
     end
     
+    def print_standings
+        players.each do |player|
+            p player.name + "'s money = " + player.money.to_s
+        end
+    end
+
     def play
-        #until self.game_over == true
-=begin
+        until self.game_over == true
             players.map { |player| player.playing_round = true }
+            print_standings
             betting_round
             drawing_round
             betting_round
-=end
             showdown
-        #end
-    end
-
-    def reset_players_called
-        players.each do |player|
-            player.called = false
+            reset_bet_called_after_round
         end
     end
 end
